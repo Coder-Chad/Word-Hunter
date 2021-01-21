@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="basic.css">
+    <link rel="stylesheet" href="index.css">
+    <!-- <link href="game_words_array.js"> -->
+    <!-- <script type="text/javascript">/game_words_array.js</script> -->
+    <!-- <script type="text/javascript" src="jquery-3.5.1.min.js"></script> -->
+    <script type="text/javascript" src="game_words_array.js"></script>  
+    <script type="text/javascript" src="word_hunter_base.js"></script>
+</head>
+<body id="myFocus">
+    <p style="font-size: x-large;">WORD HUNTER Version 2.1</p>
+    <div class="grid-page">
+        <!-- <div class="header">
+            <div>HOME</div>
+            <div>SEARCH</div>
+            <div>LOGOUT</div>
+        </div> -->
+        <div class="navbar header">
+            <a href="#about" id="about" >About</a>
+            <!-- <a href="#news">News</a> -->
+            <div class="dropdown">
+              <button class="dropbtn navbar" id="options" >Options
+                <i class="fa fa-caret-down"></i>
+              </button>
+              <div class="dropdown-content">
+                <!-- <a href="#" id="link_1">Start New Game</a>
+                <a href="#" id="link_2">Toggle Sound on or off</a>
+                <a href="#" id="link_3">Display Stats</a> -->
+                <a href="#" id="link_1">New Game at Easy Difficulty</a>
+                <a href="#" id="link_2">New Game at Harder Difficulty</a>
+                <a href="#" id="link_3">New Game at Hardest Difficulty</a>                                
+              </div>
+            </div>
+        </div>
+        <div class="messages">
+            <div>
+            <p id="messageText"></p>
+            </div>
+        </div>
+        <div class="game">
+            <p id="gameText"></p>
+        </div>
+        <div class="footer"><p id="footerText">Footer</p></div>
+    </div>          
+    
+<script>
+    // let audio = new Audio('./sounds/18-Second-Choir-Singing-Sound.mp3');
+    // audio.play();
+    // document.getElementById("pageLoadSound").play();
+    // let intKeypress = 0;
+    // let alphaKeyPressed = false;
+
+    // THE HIDDEN WORD IS SETUP
+    let previousIndexes = [];
+    let currentWordIndex = getRandomInt(0, 59983)
+    let numberOfGames = 1;
+    let hiddenWord = "Hidden";
+    let gameTextOutput = "";
+    // check for previously selected hidden words
+    if( previousIndexes.includes(currentWordIndex) ) {
+        while( previousIndexes.includes(currentWordIndex) ) {
+            previousIndexes.push(currentWordIndex);
+            currentWordIndex = getRandomInt(0, 59983);
+        }
+    } 
+    previousIndexes.push(currentWordIndex);  // add onto array
+    hiddenWord = gameWordsArray[ currentWordIndex ];  // set the hidden word
+    let blankedOutHiddenWord =  buildBlankedOutHiddenWord( hiddenWord );
+    if( blankedOutHiddenWord.length <= 0 ) {
+        alert("blanked word length error.");
+    }
+    
+    console.log("Total Games Played is:", numberOfGames);
+    console.log("The hidden word: " + hiddenWord + " has been setup.");
+
+    // SET GAME VARIABLES FOR A NEW GAME
+    const EASY = 15, HARDER = 10, HARDEST = 7;
+    let guessesLeft = EASY;
+    let missedLetters = "";
+    let correctLetters = "";
+    let correctLettersTotal = 0;
+    let lettersLeft = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z";
+    let totalPoints = 0;
+    let outOfGuesses = false;
+    let gameWon = false;
+    let gameOver = false;
+    
+    // DO GAME OUTPUT
+    gameTextOutput = "TOTAL POINTS: " + totalPoints + "<br><br>" + lettersLeft + "<br><br>HIDDEN WORD:&nbsp;" + capitalizeFirstLetter(blankedOutHiddenWord) + "&nbsp;" + hiddenWord.length + "&nbsp;Letters<br><br>TOTAL GUESSES LEFT: " + guessesLeft;
+    document.querySelector("#gameText").innerHTML = gameTextOutput;
+    document.getElementById("footerText").innerHTML = "Difficulty level is set to EASY.";
+
+    function updateGame( keypressNum ) {  // the game screen is updated 
+        let keypressStringChar = String.fromCharCode(keypressNum);  
+        let indices = getIndicesOf(keypressStringChar, hiddenWord);
+        
+        let lettersLeftIndex = 0;
+        // console.log("Indices length: " + indices.length );
+
+        // check to see if keypress guess has already been tried (check in correct or incorrect strings)
+        if( correctLetters.indexOf(keypressStringChar) != -1 || missedLetters.indexOf(keypressStringChar) != -1 ) {
+            document.querySelector("#messageText").innerHTML = "The letter " + keypressStringChar.toUpperCase() + " has been used already.";
+            let audio = new Audio('./sounds/angry_cat.mp3');
+            audio.play();
+            return;
+        }
+        
+        // Main processing area for the a to z keypress guess
+        if( outOfGuesses || gameWon || gameOver ) {
+
+        } else if( hiddenWord.includes(keypressStringChar) ) { // player made a correct guess or keypress
+            totalPoints += 10 * indices.length;
+            correctLettersTotal += indices.length;
+            if( indices.length > 0 ) {
+                let audio = new Audio('./sounds/correct_guess_1.mp3');
+                audio.play();
+            }
+            document.querySelector("#messageText").innerHTML = ""; // erase any previous message
+            correctLetters = correctLetters.concat(keypressStringChar);
+            // console.log("Letters guessed so far: " + correctLetters); 
+            
+            lettersLeftIndex = getIndicesOf(keypressStringChar, lettersLeft);
+            lettersLeft = setCharAt(lettersLeft, lettersLeftIndex[0], "_");
+            
+            // Reveal the matching letter or letters
+            for(index=0; index < indices.length; index++) {
+                blankedOutHiddenWord = setCharAt(blankedOutHiddenWord, indices[index], keypressStringChar);
+                // console.log(blankedOutHiddenWord);
+            }
+
+            guessesLeft -= 1;
+
+            if( correctLettersTotal == hiddenWord.length || guessesLeft == 0 ) {  // game ending conditions
+                if( correctLettersTotal == hiddenWord.length ) {  // has the hidden word been guessed correctly
+                    outOfGuesses = false;
+                    gameWon = true;
+                    gameOver = true;
+                    let audio = new Audio('./sounds/Victory_Trumpets_And_Crowd_Cheers_and_Applauds.mp3');
+                    audio.play();
+                    document.querySelector("#gameText").innerHTML = "Congratulations!<br><br>" + "You guessed " + capitalizeFirstLetter(hiddenWord) + " correctly!" + "<br><br>" + (10 * guessesLeft) + " Bonus points earned.<br><br>" + "Total points earned: " + (totalPoints + (10 * guessesLeft));
+                } else if( guessesLeft == 0 ) {
+                    outOfGuesses = true;
+                    gameWon = false;
+                    gameOver = true;
+                    let audio = new Audio('./sounds/game_lost_crowd_booing_10_seconds.mp3');
+                    audio.play();
+                    document.querySelector("#gameText").innerHTML = "GAME OVER!<br><br>" + "UNFORTUNATELY YOU RAN OUT OF GUESSES!" + "<br><br>The hidden word was " + capitalizeFirstLetter(hiddenWord);                            
+                }
+            }
+        } else if( !hiddenWord.includes(keypressStringChar) ) { // player made an incorrect guess or keypress
+            let audio = new Audio('./sounds/shotgun_blast_and_reload.mp3');
+            audio.play();
+            document.querySelector("#messageText").innerHTML = ""; // erase any previous message that might be displayed currently
+            missedLetters = missedLetters.concat(keypressStringChar);
+            // console.log("Missed letters so far: " + missedLetters);
+            lettersLeftIndex = getIndicesOf(keypressStringChar, lettersLeft);
+            lettersLeft = setCharAt(lettersLeft, lettersLeftIndex[0], "_");
+            guessesLeft -= 1;
+            if( guessesLeft == 0 ) {
+                outOfGuesses = true;
+                gameWon = false;
+                gameOver = true;
+                let audio = new Audio('./sounds/game_lost_crowd_booing_10_seconds.mp3');
+                audio.play();
+                document.querySelector("#gameText").innerHTML = "GAME OVER!<br><br>" + "UNFORTUNATELY YOU RAN OUT OF GUESSES!" + "<br><br>The hidden word was " + capitalizeFirstLetter(hiddenWord);                                            
+            }
+        }
+        
+        if( !gameOver ) { // UPDATE GAME TEXT SO LONG AS THE GAME IS STILL BEING PLAYED
+            gameTextOutput = "TOTAL POINTS: " + totalPoints + "<br><br>" + lettersLeft + "<br><br>HIDDEN WORD:&nbsp;" + capitalizeFirstLetter(blankedOutHiddenWord) + "&nbsp;" + hiddenWord.length + "&nbsp;Letters<br><br>TOTAL GUESSES LEFT: " + guessesLeft;
+            document.querySelector("#gameText").innerHTML = gameTextOutput;
+        }
+
+    }
+
+    function setupNewGame( difficultyLevel = EASY ) {
+        let audio = new Audio('./sounds/18-Second-Choir-Singing-Sound.mp3');
+        audio.play();
+            
+        // THE HIDDEN WORD IS SETUP
+        // let previousIndexes = [];
+        currentWordIndex = getRandomInt(0, 59983)
+        numberOfGames += 1;
+        hiddenWord = "Hidden";
+        gameTextOutput = "";
+        // check for previously selected hidden words
+        if( previousIndexes.includes(currentWordIndex) ) {
+            while( previousIndexes.includes(currentWordIndex) ) {
+                previousIndexes.push(currentWordIndex);
+                currentWordIndex = getRandomInt(0, 59983);
+            }
+        } else {
+            previousIndexes.push(currentWordIndex);  // add onto array
+        }
+        hiddenWord = gameWordsArray[ currentWordIndex ];  // set the hidden word
+        console.log("The hidden word: " + hiddenWord + " has been setup.");
+        console.log("Playing game number: " + numberOfGames);
+        blankedOutHiddenWord =  buildBlankedOutHiddenWord( hiddenWord );
+        if( blankedOutHiddenWord.length <= 0 ) {
+            alert("blanked word length error.");
+        }
+        
+        // SET IMPORTANT VARIABLES FOR A NEW GAME
+        guessesLeft = difficultyLevel;
+        missedLetters = "";
+        correctLetters = "";
+        correctLettersTotal = 0;
+        lettersLeft = "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z";
+        totalPoints = 0;
+        outOfGuesses = false;
+        gameWon = false;
+        gameOver = false;
+        
+        // UPDATE GAME AREA TEXT
+        gameTextOutput = "TOTAL POINTS: " + totalPoints + "<br><br>" + lettersLeft + "<br><br>HIDDEN WORD:&nbsp;" + capitalizeFirstLetter(blankedOutHiddenWord) + "&nbsp;" + hiddenWord.length + "&nbsp;Letters<br><br>TOTAL GUESSES LEFT: " + guessesLeft;
+        document.querySelector("#gameText").innerHTML = gameTextOutput;
+    }
+
+</script>
+<!-- <audio autoplay>
+    <source src="./sounds/18-Second-Choir-Singing-Sound.mp3" type="audio/mp3">
+</audio> -->
+</body>
+<script>
+// this.addEventListener("DOMContentLoaded", function() {
+//     console.log('All assets are loaded')
+//     let audio = new Audio('./sounds/18-Second-Choir-Singing-Sound.mp3');
+//     audio.play();
+
+// })
+about.onclick = function(event) {
+    // if (event.altKey && event.shiftKey) {
+    //   alert('Hooray!');
+    // }
+    let aboutString = "This is Word Hunter version 2.1\n\nCreated by Chad Estell at the end of January 2021.\n\nThere are three difficulty levels.\n---> EASY is 15 total guesses.\n---> HARDER is 10 total guesses.\n---> HARDEST is 7 total guesses.\n\nThis is a demonstration of my HTML, CSS Grid and Javascript code writing skills.\n\nNOTE: pressing the 1 key starts a new game at the EASY difficulty level.";
+    alert(aboutString);
+};
+
+// link_1.onclick = function(event) {
+//     // alert("Link 1 clicked");
+//     setupNewGame();
+// };
+
+// link_2.onclick = function(event) {
+//     // if (event.altKey && event.shiftKey) {
+//     //   alert('Hooray!');
+//     // }
+//     alert("Link 2 clicked");
+// };
+
+// link_3.onclick = function(event) {
+//     // if (event.altKey && event.shiftKey) {
+//     //   alert('Hooray!');
+//     // }
+//     alert("Link 3 clicked");
+// };
+
+link_1.onclick = function(event) {
+    setupNewGame( EASY );
+    document.getElementById("footerText").innerHTML = "Difficulty level is set to EASY.";
+};
+
+link_2.onclick = function(event) {
+    setupNewGame( HARDER );
+    document.getElementById("footerText").innerHTML = "Difficulty level is set to HARDER.";
+};
+
+link_3.onclick = function(event) {
+    setupNewGame( HARDEST );    
+    document.getElementById("footerText").innerHTML = "Difficulty level is set to HARDEST.";
+};
+
+
+
+this.addEventListener('keypress', event => {
+    let keypressNumber = event.keyCode;
+    // only send lowercase a to z to updateGame()
+    if( keypressNumber == 49 ) {  // number 1 keypress
+        setupNewGame();
+        return;
+    } else if( keypressNumber >= 65 && keypressNumber <= 90 && !gameOver ) {  // convert the uppercase A to Z keypress to a lowercase a to z
+        keypressNumber += 32; // convert to lowercase ascii value
+        updateGame( keypressNumber );
+    } else if(keypressNumber >= 97 && keypressNumber <= 122 && !gameOver ) {
+        updateGame( keypressNumber );
+    }
+});
+
+var div = document.getElementById("myFocus");
+      div.setAttribute("tabindex", 1);
+      div.focus();
+</script>
+</html>
