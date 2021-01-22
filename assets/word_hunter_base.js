@@ -8,7 +8,6 @@ function hiddenWordSetCharAt(str, index, chr) {
   return str.substring(0,index) + chr.concat(' ') + str.substring(index+1);
 }
 
-
 // returns the random number which is used in the selecting of the hidden word from among 59,983 possibles
 function getRandomInt(fromMin, toMax) 
 {

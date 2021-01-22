@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="basic.css">
-    <link rel="stylesheet" href="index.css">
-    <!-- <link href="game_words_array.js"> -->
-    <!-- <script type="text/javascript">/game_words_array.js</script> -->
-    <!-- <script type="text/javascript" src="jquery-3.5.1.min.js"></script> -->
-    <script type="text/javascript" src="game_words_array.js"></script>  
-    <script type="text/javascript" src="word_hunter_base.js"></script>
+    <title>Word Hunter</title>
+    <link rel="stylesheet" href="./assets/basic.css">
+    <link rel="stylesheet" href="./assets/index.css">
+    <script type="text/javascript" src="./assets/game_words_array.js"></script>  
+    <script type="text/javascript" src="./assets/word_hunter_base.js"></script>
     <link rel="icon" href="./assets/favicon.ico" type="image/x-icon">
-    <!-- <link rel="shortcut icon" type="image/x-icon" href="favicon.ico"> -->
 </head>
 <body id="myFocus">
-    <p style="font-size: x-large;">WORD HUNTER Version 2.1</p>
+    <div>
+        <img src="./assets/250-square-my-logo-july-10-2018.png" width="60px" height="60px" alt="Webpro Freelance Logo"/>
+    </div>
+    <div>
+        <p style="font-size: x-large;">WORD HUNTER 2.1 by Webpro Freelance</p>
+    </div>
     <div class="grid-page">
         <!-- <div class="header">
             <div>HOME</div>
@@ -29,19 +30,20 @@
               <button class="dropbtn navbar" id="options" >Options
                 <i class="fa fa-caret-down"></i>
               </button>
-              <div class="dropdown-content">
+              <div class="dropdown-content" >
                 <!-- <a href="#" id="link_1">Start New Game</a>
                 <a href="#" id="link_2">Toggle Sound on or off</a>
                 <a href="#" id="link_3">Display Stats</a> -->
-                <a href="#" id="link_1">New Game at Easy Difficulty</a>
-                <a href="#" id="link_2">New Game at Harder Difficulty</a>
-                <a href="#" id="link_3">New Game at Hardest Difficulty</a>                                
+                <a href="#" id="link_1" >New Game at Easy Difficulty</a>
+                <a href="#" id="link_2" >New Game at Harder Difficulty</a>
+                <a href="#" id="link_3" >New Game at Hardest Difficulty</a>                                
               </div>
             </div>
         </div>
         <div class="messages">
             <div>
-            <p id="messageText"></p>
+                <p id="messageText"></p>
+                <a href="" id="lookupWord"></a>        
             </div>
         </div>
         <div class="game">
@@ -51,12 +53,6 @@
     </div>          
     
 <script>
-    // let audio = new Audio('./sounds/18-Second-Choir-Singing-Sound.mp3');
-    // audio.play();
-    // document.getElementById("pageLoadSound").play();
-    // let intKeypress = 0;
-    // let alphaKeyPressed = false;
-
     // THE HIDDEN WORD IS SETUP
     let previousIndexes = [];
     let currentWordIndex = getRandomInt(0, 59983)
@@ -78,10 +74,10 @@
     }
     
     console.log("Total Games Played is:", numberOfGames);
-    console.log("The hidden word: " + hiddenWord + " has been setup.");
+    console.log("The Hidden Word: " + hiddenWord + " has been setup.");
 
     // SET GAME VARIABLES FOR A NEW GAME
-    const EASY = 15, HARDER = 10, HARDEST = 7;
+    const EASY = 18, HARDER = 13, HARDEST = 10;
     let guessesLeft = EASY;
     let missedLetters = "";
     let correctLetters = "";
@@ -93,7 +89,7 @@
     let gameOver = false;
     
     // DO GAME OUTPUT
-    gameTextOutput = "TOTAL POINTS: " + totalPoints + "<br><br>" + lettersLeft + "<br><br>HIDDEN WORD:&nbsp;" + capitalizeFirstLetter(blankedOutHiddenWord) + "&nbsp;" + hiddenWord.length + "&nbsp;Letters<br><br>TOTAL GUESSES LEFT: " + guessesLeft;
+    gameTextOutput = "TOTAL POINTS: " + totalPoints + "<br><br>" + lettersLeft + "<br><br>Hidden Word:&nbsp;" + capitalizeFirstLetter(blankedOutHiddenWord) + "&nbsp;" + hiddenWord.length + "&nbsp;Letters<br><br>Total guesses left: " + guessesLeft;
     document.querySelector("#gameText").innerHTML = gameTextOutput;
     document.getElementById("footerText").innerHTML = "Difficulty level is set to EASY.";
 
@@ -116,13 +112,15 @@
         if( outOfGuesses || gameWon || gameOver ) {
 
         } else if( hiddenWord.includes(keypressStringChar) ) { // player made a correct guess or keypress
+            document.querySelector("#messageText").innerHTML = ""; // erase any previous message such as a duplicate character keypress guess prompt
+            
             totalPoints += 10 * indices.length;
             correctLettersTotal += indices.length;
             if( indices.length > 0 ) {
                 let audio = new Audio('./sounds/correct_guess_1.mp3');
                 audio.play();
             }
-            document.querySelector("#messageText").innerHTML = ""; // erase any previous message
+            
             correctLetters = correctLetters.concat(keypressStringChar);
             // console.log("Letters guessed so far: " + correctLetters); 
             
@@ -144,20 +142,32 @@
                     gameOver = true;
                     let audio = new Audio('./sounds/Victory_Trumpets_And_Crowd_Cheers_and_Applauds.mp3');
                     audio.play();
+                    // UPDATE message area and game area text
                     document.querySelector("#gameText").innerHTML = "Congratulations!<br><br>" + "You guessed " + capitalizeFirstLetter(hiddenWord) + " correctly!" + "<br><br>" + (10 * guessesLeft) + " Bonus points earned.<br><br>" + "Total points earned: " + (totalPoints + (10 * guessesLeft));
+                    let theUrlHref = "https://www.thefreedictionary.com/" + hiddenWord;
+                    let a = document.getElementById('lookupWord'); 
+                    a.href = theUrlHref;
+                    document.querySelector("#lookupWord").innerHTML = "Click here to view the definition of " + capitalizeFirstLetter(hiddenWord) + ".";
                 } else if( guessesLeft == 0 ) {
                     outOfGuesses = true;
                     gameWon = false;
                     gameOver = true;
                     let audio = new Audio('./sounds/game_lost_crowd_booing_10_seconds.mp3');
                     audio.play();
+                    // UPDATE message area and game area text
                     document.querySelector("#gameText").innerHTML = "GAME OVER!<br><br>" + "UNFORTUNATELY YOU RAN OUT OF GUESSES!" + "<br><br>The hidden word was " + capitalizeFirstLetter(hiddenWord);                            
+                    let theUrlHref = "https://www.thefreedictionary.com/" + hiddenWord;
+                    let a = document.getElementById('lookupWord'); 
+                    a.href = theUrlHref;
+                    document.querySelector("#lookupWord").innerHTML = "Click here to view the definition of " + capitalizeFirstLetter(hiddenWord) + ".";
                 }
             }
         } else if( !hiddenWord.includes(keypressStringChar) ) { // player made an incorrect guess or keypress
+            document.querySelector("#messageText").innerHTML = ""; // erase any previous message such as a duplicate character keypress guess prompt
+
             let audio = new Audio('./sounds/shotgun_blast_and_reload.mp3');
             audio.play();
-            document.querySelector("#messageText").innerHTML = ""; // erase any previous message that might be displayed currently
+            
             missedLetters = missedLetters.concat(keypressStringChar);
             // console.log("Missed letters so far: " + missedLetters);
             lettersLeftIndex = getIndicesOf(keypressStringChar, lettersLeft);
@@ -169,12 +179,17 @@
                 gameOver = true;
                 let audio = new Audio('./sounds/game_lost_crowd_booing_10_seconds.mp3');
                 audio.play();
+                // UPDATE message area and game area text
                 document.querySelector("#gameText").innerHTML = "GAME OVER!<br><br>" + "UNFORTUNATELY YOU RAN OUT OF GUESSES!" + "<br><br>The hidden word was " + capitalizeFirstLetter(hiddenWord);                                            
+                let theUrlHref = "https://www.thefreedictionary.com/" + hiddenWord;
+                let a = document.getElementById('lookupWord'); 
+                a.href = theUrlHref;
+                document.querySelector("#lookupWord").innerHTML = "Click here to view the definition of " + capitalizeFirstLetter(hiddenWord) + ".";
             }
         }
         
         if( !gameOver ) { // UPDATE GAME TEXT SO LONG AS THE GAME IS STILL BEING PLAYED
-            gameTextOutput = "TOTAL POINTS: " + totalPoints + "<br><br>" + lettersLeft + "<br><br>HIDDEN WORD:&nbsp;" + capitalizeFirstLetter(blankedOutHiddenWord) + "&nbsp;" + hiddenWord.length + "&nbsp;Letters<br><br>TOTAL GUESSES LEFT: " + guessesLeft;
+            gameTextOutput = "TOTAL POINTS: " + totalPoints + "<br><br>" + lettersLeft + "<br><br>Hidden Word:&nbsp;" + capitalizeFirstLetter(blankedOutHiddenWord) + "&nbsp;" + hiddenWord.length + "&nbsp;Letters<br><br>Total guesses left: " + guessesLeft;
             document.querySelector("#gameText").innerHTML = gameTextOutput;
         }
 
@@ -183,7 +198,8 @@
     function setupNewGame( difficultyLevel = EASY ) {
         let audio = new Audio('./sounds/18-Second-Choir-Singing-Sound.mp3');
         audio.play();
-            
+        document.querySelector("#messageText").innerHTML = ""; // erase any previous message
+        document.querySelector("#lookupWord").innerHTML = "";  // erase the lookup word definition link
         // THE HIDDEN WORD IS SETUP
         // let previousIndexes = [];
         currentWordIndex = getRandomInt(0, 59983)
@@ -200,7 +216,7 @@
             previousIndexes.push(currentWordIndex);  // add onto array
         }
         hiddenWord = gameWordsArray[ currentWordIndex ];  // set the hidden word
-        console.log("The hidden word: " + hiddenWord + " has been setup.");
+        console.log("The Hidden Word: " + hiddenWord + " has been setup.");
         console.log("Playing game number: " + numberOfGames);
         blankedOutHiddenWord =  buildBlankedOutHiddenWord( hiddenWord );
         if( blankedOutHiddenWord.length <= 0 ) {
@@ -219,7 +235,7 @@
         gameOver = false;
         
         // UPDATE GAME AREA TEXT
-        gameTextOutput = "TOTAL POINTS: " + totalPoints + "<br><br>" + lettersLeft + "<br><br>HIDDEN WORD:&nbsp;" + capitalizeFirstLetter(blankedOutHiddenWord) + "&nbsp;" + hiddenWord.length + "&nbsp;Letters<br><br>TOTAL GUESSES LEFT: " + guessesLeft;
+        gameTextOutput = "TOTAL POINTS: " + totalPoints + "<br><br>" + lettersLeft + "<br><br>Hidden Word:&nbsp;" + capitalizeFirstLetter(blankedOutHiddenWord) + "&nbsp;" + hiddenWord.length + "&nbsp;Letters<br><br>Total guesses left: " + guessesLeft;
         document.querySelector("#gameText").innerHTML = gameTextOutput;
     }
 
@@ -239,45 +255,24 @@ about.onclick = function(event) {
     // if (event.altKey && event.shiftKey) {
     //   alert('Hooray!');
     // }
-    let aboutString = "This is Word Hunter version 2.1\n\nCreated by Chad Estell at the end of January 2021.\n\nThere are three difficulty levels.\n---> EASY is 15 total guesses.\n---> HARDER is 10 total guesses.\n---> HARDEST is 7 total guesses.\n\nThis is a demonstration of my HTML, CSS Grid and Javascript code writing skills.\n\nNOTE: pressing the 1 key starts a new game at the EASY difficulty level.";
+    let aboutString = "This is Word Hunter 2.1 by Webpro Freelance\n\nCreated by Chad Estell at the end of January 2021.\n\nThis is a demonstration of my HTML, CSS Grid and Javascript code writing skills.\n\nThere are three difficulty levels.\n---> EASY is 18 total guesses.\n---> HARDER is 13 total guesses.\n---> HARDEST is 10 total guesses.\n\nAlso: Pressing the 1 key starts a new game at the EASY difficulty level.\n\nThis game is ment to be played on a desktop or laptop computer using the keyboard to make guesses.";
     alert(aboutString);
 };
 
-// link_1.onclick = function(event) {
-//     // alert("Link 1 clicked");
-//     setupNewGame();
-// };
-
-// link_2.onclick = function(event) {
-//     // if (event.altKey && event.shiftKey) {
-//     //   alert('Hooray!');
-//     // }
-//     alert("Link 2 clicked");
-// };
-
-// link_3.onclick = function(event) {
-//     // if (event.altKey && event.shiftKey) {
-//     //   alert('Hooray!');
-//     // }
-//     alert("Link 3 clicked");
-// };
-
 link_1.onclick = function(event) {
-    setupNewGame( EASY );
     document.getElementById("footerText").innerHTML = "Difficulty level is set to EASY.";
+    setupNewGame( EASY );
 };
 
 link_2.onclick = function(event) {
-    setupNewGame( HARDER );
     document.getElementById("footerText").innerHTML = "Difficulty level is set to HARDER.";
+    setupNewGame( HARDER );
 };
 
 link_3.onclick = function(event) {
-    setupNewGame( HARDEST );    
     document.getElementById("footerText").innerHTML = "Difficulty level is set to HARDEST.";
+    setupNewGame( HARDEST );    
 };
-
-
 
 this.addEventListener('keypress', event => {
     let keypressNumber = event.keyCode;
@@ -294,7 +289,8 @@ this.addEventListener('keypress', event => {
 });
 
 var div = document.getElementById("myFocus");
-      div.setAttribute("tabindex", 1);
-      div.focus();
+div.setAttribute("tabindex", 1);
+div.focus();
+
 </script>
 </html>
